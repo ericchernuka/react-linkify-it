@@ -1,4 +1,4 @@
-import { test, expect } from 'vitest';
+import { afterAll, beforeEach, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import {
   LinkItUrl,
@@ -7,6 +7,18 @@ import {
   LinkItHashtag,
   LinkItMention,
 } from '../../components';
+
+const consoleError = vi
+  .spyOn(console, 'error')
+  .mockImplementation(() => undefined);
+
+beforeEach(() => {
+  consoleError.mockClear();
+});
+
+afterAll(() => {
+  consoleError.mockRestore();
+});
 
 test('Multiple LinkIt components can be nested', () => {
   render(
@@ -31,6 +43,10 @@ test('Multiple LinkIt components can be nested', () => {
   expect(screen.getByRole('link', { name: '#javascript' })).toHaveAttribute(
     'href',
     'https://x.com/hashtag/javascript',
+  );
+  expect(consoleError).not.toHaveBeenCalledWith(
+    expect.stringContaining('Encountered two children with the same key'),
+    expect.anything(),
   );
 });
 

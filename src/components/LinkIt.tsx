@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import { Fragment } from 'react';
 import type { ReactLinkItProps } from '../types';
 import { findText } from '../utils';
 

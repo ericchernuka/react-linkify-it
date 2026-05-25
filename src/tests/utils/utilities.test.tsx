@@ -1,29 +1,6 @@
 import { test, expect } from 'vitest';
-import { getKey } from '../../utils/getKey';
 import { ctrlCharactersRegex } from '../../utils/ctrlCharactersRegex';
 import { findText } from '../../utils/findText';
-
-test('getKey generates unique keys', () => {
-  const key1 = getKey();
-  const key2 = getKey();
-  const key3 = getKey();
-
-  expect(typeof key1).toBe('number');
-  expect(typeof key2).toBe('number');
-  expect(typeof key3).toBe('number');
-
-  expect(key1).not.toBe(key2);
-  expect(key2).not.toBe(key3);
-  expect(key1).not.toBe(key3);
-});
-
-test('getKey generates incrementing sequence', () => {
-  const keys = Array.from({ length: 10 }, () => getKey());
-
-  for (let i = 1; i < keys.length; i++) {
-    expect(keys[i]).toBeGreaterThan(keys[i - 1] as number);
-  }
-});
 
 test('ctrlCharactersRegex matches control characters', () => {
   // Reset regex state before each test due to global flag

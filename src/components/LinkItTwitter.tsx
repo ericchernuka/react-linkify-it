@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import { Fragment } from 'react';
 import type { ReactHOCLinkProps } from '../types';
 import { findText, twitterRegex } from '../utils';
 import { TwitterComponent } from './TwitterComponent';

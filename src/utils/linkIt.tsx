@@ -1,7 +1,32 @@
+import { cloneElement, isValidElement } from 'react';
 import type { ReactNode } from 'react';
 import type { Component } from '../types';
 import { ctrlCharactersRegex } from './ctrlCharactersRegex';
-import { getKey } from './getKey';
+
+type KeyGenerator = () => number;
+
+const createKeyGenerator = (): KeyGenerator => {
+  let nextKey = 0;
+
+  return () => nextKey++;
+};
+
+const renderLinkComponent = (
+  match: string,
+  linkComponent: Component,
+  getKey: KeyGenerator,
+): ReactNode => {
+  const key = getKey();
+  const element = linkComponent(match, key);
+
+  if (isValidElement(element)) {
+    return cloneElement(element, {
+      key: `react-linkify-it-link-${key}`,
+    });
+  }
+
+  return element;
+};
 
 /**
  * Generic function to linkify any pattern in a string using a custom component.
@@ -26,6 +51,7 @@ export function linkIt(
   text: string,
   linkComponent: Component,
   linkRegex: RegExp,
+  getKey: KeyGenerator = createKeyGenerator(),
 ): string | ReactNode[] {
   const elements: ReactNode[] = [];
   let rest = text;
@@ -47,7 +73,7 @@ export function linkIt(
     if (textBeforeMatch) {
       elements.push(textBeforeMatch);
     }
-    elements.push(linkComponent(url, getKey()));
+    elements.push(renderLinkComponent(url, linkComponent, getKey));
   }
 
   if (hasMatches && rest) {

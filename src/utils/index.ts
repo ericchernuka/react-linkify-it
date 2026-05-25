@@ -1,5 +1,4 @@
 export { ctrlCharactersRegex } from './ctrlCharactersRegex';
-export { getKey } from './getKey';
 export {
   urlRegex,
   emailRegex,
