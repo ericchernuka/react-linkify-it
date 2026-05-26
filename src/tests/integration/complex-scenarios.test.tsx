@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, test, expect, vi } from 'vitest';
+import { test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import {
   LinkItUrl,
@@ -8,46 +8,45 @@ import {
   LinkItMention,
 } from '../../components';
 
-const consoleError = vi
-  .spyOn(console, 'error')
-  .mockImplementation(() => undefined);
+const expectNoConsoleErrors = (testBody: () => void) => {
+  const consoleError = vi
+    .spyOn(console, 'error')
+    .mockImplementation(() => undefined);
 
-beforeEach(() => {
-  consoleError.mockClear();
-});
-
-afterAll(() => {
-  consoleError.mockRestore();
-});
+  try {
+    testBody();
+    expect(consoleError).toHaveBeenCalledTimes(0);
+  } finally {
+    consoleError.mockRestore();
+  }
+};
 
 test('Multiple LinkIt components can be nested', () => {
-  render(
-    <div>
-      <LinkItHashtag urlTemplate="https://x.com/hashtag/{hashtag}">
-        <LinkItMention urlTemplate="https://x.com/{mention}">
-          Thanks @reactjs for #react! Amazing work on #javascript too.
-        </LinkItMention>
-      </LinkItHashtag>
-    </div>,
-  );
+  expectNoConsoleErrors(() => {
+    render(
+      <div>
+        <LinkItHashtag urlTemplate="https://x.com/hashtag/{hashtag}">
+          <LinkItMention urlTemplate="https://x.com/{mention}">
+            Thanks @reactjs for #react! Amazing work on #javascript too.
+          </LinkItMention>
+        </LinkItHashtag>
+      </div>,
+    );
 
-  // Should find mention and hashtags
-  expect(screen.getByRole('link', { name: '@reactjs' })).toHaveAttribute(
-    'href',
-    'https://x.com/reactjs',
-  );
-  expect(screen.getByRole('link', { name: '#react' })).toHaveAttribute(
-    'href',
-    'https://x.com/hashtag/react',
-  );
-  expect(screen.getByRole('link', { name: '#javascript' })).toHaveAttribute(
-    'href',
-    'https://x.com/hashtag/javascript',
-  );
-  expect(consoleError).not.toHaveBeenCalledWith(
-    expect.stringContaining('Encountered two children with the same key'),
-    expect.anything(),
-  );
+    // Should find mention and hashtags
+    expect(screen.getByRole('link', { name: '@reactjs' })).toHaveAttribute(
+      'href',
+      'https://x.com/reactjs',
+    );
+    expect(screen.getByRole('link', { name: '#react' })).toHaveAttribute(
+      'href',
+      'https://x.com/hashtag/react',
+    );
+    expect(screen.getByRole('link', { name: '#javascript' })).toHaveAttribute(
+      'href',
+      'https://x.com/hashtag/javascript',
+    );
+  });
 });
 
 test('Complex text with multiple patterns', () => {

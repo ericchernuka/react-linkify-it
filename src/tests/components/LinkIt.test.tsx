@@ -1,21 +1,22 @@
-import { afterAll, beforeEach, test, expect, vi } from 'vitest';
+import { test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { type ReactNode, useEffect } from 'react';
 import { LinkIt } from '../../components/LinkIt';
 import { UrlComponent } from '../../components/UrlComponent';
 import { urlRegex } from '../../utils/regexPatterns';
 
-const consoleError = vi
-  .spyOn(console, 'error')
-  .mockImplementation(() => undefined);
+const expectNoConsoleErrors = (testBody: () => void) => {
+  const consoleError = vi
+    .spyOn(console, 'error')
+    .mockImplementation(() => undefined);
 
-beforeEach(() => {
-  consoleError.mockClear();
-});
-
-afterAll(() => {
-  consoleError.mockRestore();
-});
+  try {
+    testBody();
+    expect(consoleError).toHaveBeenCalledTimes(0);
+  } finally {
+    consoleError.mockRestore();
+  }
+};
 
 test('LinkIt component with basic functionality', () => {
   render(
@@ -65,26 +66,22 @@ test('LinkIt component with multiple matches', () => {
 });
 
 test('LinkIt component with mixed content including React elements', () => {
-  render(
-    <LinkIt
-      component={(match, key) => <UrlComponent match={match} key={key} />}
-      regex={urlRegex}
-    >
-      Check out https://example.com
-      <div>and this nested content</div>
-      also www.test.com
-    </LinkIt>,
-  );
+  expectNoConsoleErrors(() => {
+    render(
+      <LinkIt
+        component={(match, key) => <UrlComponent match={match} key={key} />}
+        regex={urlRegex}
+      >
+        Check out https://example.com
+        <div>and this nested content</div>
+        also www.test.com
+      </LinkIt>,
+    );
 
-  const links = screen.getAllByRole('link');
-  expect(links).toHaveLength(2);
-  expect(screen.getByText('and this nested content')).toBeInTheDocument();
-  expect(consoleError).not.toHaveBeenCalledWith(
-    expect.stringContaining(
-      'Each child in a list should have a unique "key" prop.',
-    ),
-    expect.anything(),
-  );
+    const links = screen.getAllByRole('link');
+    expect(links).toHaveLength(2);
+    expect(screen.getByText('and this nested content')).toBeInTheDocument();
+  });
 });
 
 test('LinkIt component with custom component', () => {
@@ -152,40 +149,32 @@ test('LinkIt preserves keyed child identity across rerenders', () => {
 });
 
 test('LinkIt does not warn about missing keys for generated siblings', () => {
-  render(
-    <LinkIt
-      component={(match, key) => <UrlComponent match={match} key={key} />}
-      regex={urlRegex}
-    >
-      Check out https://example.com
-      <div>and this nested content</div>
-      also www.test.com
-    </LinkIt>,
-  );
-
-  expect(consoleError).not.toHaveBeenCalledWith(
-    expect.stringContaining(
-      'Each child in a list should have a unique "key" prop.',
-    ),
-    expect.anything(),
-  );
+  expectNoConsoleErrors(() => {
+    render(
+      <LinkIt
+        component={(match, key) => <UrlComponent match={match} key={key} />}
+        regex={urlRegex}
+      >
+        Check out https://example.com
+        <div>and this nested content</div>
+        also www.test.com
+      </LinkIt>,
+    );
+  });
 });
 
 test('LinkIt does not collide with existing generated-key-shaped siblings', () => {
-  render(
-    <LinkIt
-      component={(match, key) => <UrlComponent match={match} key={key} />}
-      regex={urlRegex}
-    >
-      <span key="react-linkify-it-link-0">existing</span>
-      Visit https://example.com
-    </LinkIt>,
-  );
-
-  expect(consoleError).not.toHaveBeenCalledWith(
-    expect.stringContaining('Encountered two children with the same key'),
-    expect.anything(),
-  );
+  expectNoConsoleErrors(() => {
+    render(
+      <LinkIt
+        component={(match, key) => <UrlComponent match={match} key={key} />}
+        regex={urlRegex}
+      >
+        <span key="react-linkify-it-link-0">existing</span>
+        Visit https://example.com
+      </LinkIt>,
+    );
+  });
 });
 
 test('LinkIt linkifies iterable children', () => {
@@ -204,43 +193,41 @@ test('LinkIt linkifies iterable children', () => {
 });
 
 test('LinkIt handles dynamic text changing from no URLs to changing URLs', () => {
-  const renderLinkIt = (children: string) => (
-    <LinkIt
-      component={(match, key) => <UrlComponent match={match} key={key} />}
-      regex={urlRegex}
-    >
-      {children}
-    </LinkIt>
-  );
+  expectNoConsoleErrors(() => {
+    const renderLinkIt = (children: string) => (
+      <LinkIt
+        component={(match, key) => <UrlComponent match={match} key={key} />}
+        regex={urlRegex}
+      >
+        {children}
+      </LinkIt>
+    );
 
-  const { rerender } = render(renderLinkIt('No links here yet'));
+    const { rerender } = render(renderLinkIt('No links here yet'));
 
-  expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.queryByRole('link')).toBeNull();
 
-  rerender(renderLinkIt('Now visit https://example.com'));
+    rerender(renderLinkIt('Now visit https://example.com'));
 
-  expect(
-    screen.getByRole('link', { name: 'https://example.com' }),
-  ).toHaveAttribute('href', 'https://example.com');
+    expect(
+      screen.getByRole('link', { name: 'https://example.com' }),
+    ).toHaveAttribute('href', 'https://example.com');
 
-  rerender(
-    renderLinkIt(
-      'Try https://changed.example.com and www.changed-two.example now',
-    ),
-  );
+    rerender(
+      renderLinkIt(
+        'Try https://changed.example.com and www.changed-two.example now',
+      ),
+    );
 
-  expect(screen.queryByRole('link', { name: 'https://example.com' })).toBeNull();
-  expect(
-    screen.getByRole('link', { name: 'https://changed.example.com' }),
-  ).toHaveAttribute('href', 'https://changed.example.com');
-  expect(
-    screen.getByRole('link', { name: 'www.changed-two.example' }),
-  ).toHaveAttribute('href', 'http://www.changed-two.example');
-  expect(screen.getAllByRole('link')).toHaveLength(2);
-  expect(consoleError).not.toHaveBeenCalledWith(
-    expect.stringContaining(
-      'Each child in a list should have a unique "key" prop.',
-    ),
-    expect.anything(),
-  );
+    expect(
+      screen.queryByRole('link', { name: 'https://example.com' }),
+    ).toBeNull();
+    expect(
+      screen.getByRole('link', { name: 'https://changed.example.com' }),
+    ).toHaveAttribute('href', 'https://changed.example.com');
+    expect(
+      screen.getByRole('link', { name: 'www.changed-two.example' }),
+    ).toHaveAttribute('href', 'http://www.changed-two.example');
+    expect(screen.getAllByRole('link')).toHaveLength(2);
+  });
 });
