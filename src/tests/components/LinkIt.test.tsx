@@ -171,6 +171,23 @@ test('LinkIt does not warn about missing keys for generated siblings', () => {
   );
 });
 
+test('LinkIt does not collide with existing generated-key-shaped siblings', () => {
+  render(
+    <LinkIt
+      component={(match, key) => <UrlComponent match={match} key={key} />}
+      regex={urlRegex}
+    >
+      <span key="react-linkify-it-link-0">existing</span>
+      Visit https://example.com
+    </LinkIt>,
+  );
+
+  expect(consoleError).not.toHaveBeenCalledWith(
+    expect.stringContaining('Encountered two children with the same key'),
+    expect.anything(),
+  );
+});
+
 test('LinkIt linkifies iterable children', () => {
   render(
     <LinkIt

@@ -51,8 +51,8 @@ export function linkIt(
   text: string,
   linkComponent: Component,
   linkRegex: RegExp,
-  getKey: KeyGenerator = createKeyGenerator(),
 ): string | ReactNode[] {
+  const getKey = createKeyGenerator();
   const elements: ReactNode[] = [];
   let rest = text;
   let hasMatches = false;
