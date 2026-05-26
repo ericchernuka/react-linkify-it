@@ -1,22 +1,10 @@
-import { test, expect, vi } from 'vitest';
+import { test, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { type ReactNode, useEffect } from 'react';
+import { expectNoConsoleErrors } from '../expectNoConsoleErrors';
 import { LinkIt } from '../../components/LinkIt';
 import { UrlComponent } from '../../components/UrlComponent';
 import { urlRegex } from '../../utils/regexPatterns';
-
-const expectNoConsoleErrors = (testBody: () => void) => {
-  const consoleError = vi
-    .spyOn(console, 'error')
-    .mockImplementation(() => undefined);
-
-  try {
-    testBody();
-    expect(consoleError).toHaveBeenCalledTimes(0);
-  } finally {
-    consoleError.mockRestore();
-  }
-};
 
 test('LinkIt component with basic functionality', () => {
   render(

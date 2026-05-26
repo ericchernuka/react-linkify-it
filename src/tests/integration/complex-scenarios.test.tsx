@@ -1,5 +1,6 @@
-import { test, expect, vi } from 'vitest';
+import { test, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { expectNoConsoleErrors } from '../expectNoConsoleErrors';
 import {
   LinkItUrl,
   LinkItEmail,
@@ -7,19 +8,6 @@ import {
   LinkItHashtag,
   LinkItMention,
 } from '../../components';
-
-const expectNoConsoleErrors = (testBody: () => void) => {
-  const consoleError = vi
-    .spyOn(console, 'error')
-    .mockImplementation(() => undefined);
-
-  try {
-    testBody();
-    expect(consoleError).toHaveBeenCalledTimes(0);
-  } finally {
-    consoleError.mockRestore();
-  }
-};
 
 test('Multiple LinkIt components can be nested', () => {
   expectNoConsoleErrors(() => {
